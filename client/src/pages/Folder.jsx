@@ -14,6 +14,8 @@ function Folder(){
 
     const [previewImage, setPreviewImage] = useState(null);
 
+    const [isUploading, setIsUploading] = useState(false);
+
     const getFiles = async () => {
         try{
             const response = await api.get(`/file/folder/${id}`);
@@ -32,26 +34,28 @@ function Folder(){
     }
 
     const handleUpload = async () => {
+        if(isUploading){
+            return;
+        }
         if(selectedFile.length === 0){
             return alert("Please select atleast one file to upload");
         }
 
         try{
+            setIsUploading(true);
             const formData = new FormData();
-
             selectedFile.forEach((file) => {
                 formData.append("images", file);
             })
 
             const response = await api.post(`/file/upload/${id}`, formData);
-
             alert(response.data.message);
-
             setSelectedFile([]);
-
             getFiles();
         }catch(err){
             alert(err.response?.data?.message || "Unable to upload files");
+        }finally{
+            setIsUploading(false);
         }
     }
 
@@ -125,9 +129,11 @@ function Folder(){
 
                         <button
                             onClick={handleUpload}
-                            className="h-12 px-6 bg-blue-700 text-white font-semibold rounded-lg hover:bg-blue-800 transition whitespace-nowrap"
+                            disabled={isUploading}
+                            className={`px-6 py-3 rounded-lg font-semibold text-white transition ${
+                              isUploading? "bg-gray-400 cursor-not-allowed" : "bg-blue-800 hover:bg-blue-900"}`}
                         >
-                            + Upload File
+                            {isUploading? "Uploading..." : "+ Upload File"}
                         </button>
 
                     </div>

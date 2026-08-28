@@ -10,6 +10,8 @@ function Register(){
              password : "",
              confirmPassword : ""
          })
+    
+        const [isLoading, setIsLoading] = useState(false);
 
          const navigate = useNavigate()
      
@@ -19,12 +21,18 @@ function Register(){
      
          const handleSubmit = async (e) => {
              e.preventDefault();
+             if(isLoading){
+                return;
+             }
              try{
+                setIsLoading(true);
                const response = await api.post("/auth/register", registerUser);
                alert(response.data.message);
                navigate("/verify-email");
              }catch(err){
                alert(err.response?.data?.message || "Register failed");
+             }finally{
+                setIsLoading(false);
              }
          }
 
@@ -133,10 +141,12 @@ function Register(){
                      <br />
                      <br />
 
-                     <button type="submit"
-                         className="w-full bg-blue-800 text-white py-3 rounded-lg font-semibold hover:bg-blue-900 transition"
-                     >
-                         Register
+                     <button type="submit" 
+                     disabled={isLoading}
+                         className={`w-full text-white py-3 rounded-lg font-semibold transition ${
+                          isLoading? "bg-gray-400 cursor-not-allowed" : "bg-blue-800 hover:bg-blue-900"}`}
+                        >
+                         {isLoading? "Registering..." : "Register"}
                      </button>
 
                      <div
