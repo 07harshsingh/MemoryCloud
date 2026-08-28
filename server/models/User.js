@@ -13,16 +13,6 @@ const userSchema = new mongoose.Schema({
     password : {
         type : String
     },
-    isVerified : {
-        type : Boolean,
-        default : false
-    },
-    verificationCode : {
-        type : String
-    },
-    verificationCodeExpires : {
-        type : Date
-    },
     googleId : {
         type : String
     }

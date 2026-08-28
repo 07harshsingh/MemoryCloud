@@ -28,26 +28,14 @@ const registerUser = async (req,res,next) => {
 
       const hashPassword = await bcrypt.hash(password, 10);
 
-      const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
-
-      const verificationCodeExpires = new Date(Date.now() + 10*60*1000);
-
       const user = await User.create({
         username,
         email,
         password : hashPassword,
-        verificationCode,
-        verificationCodeExpires
       })
 
-      try {
-        await sendVerificationEmail(email, verificationCode);
-      }catch (emailError) {
-         await User.findByIdAndDelete(user._id);
-         throw emailError;
-      }
       res.status(201).json({
-        message : "User registered successfully, Check your email for verification code"
+        message : "User registered successfully"
       })
 
     }catch(err){
@@ -55,54 +43,6 @@ const registerUser = async (req,res,next) => {
     }
 }
 
-
-const verifyEmail = async (req,res,next) => {
-    try{
-       const {email, verificationCode} = req.body;
-       if(!email || !verificationCode){
-        const error = new Error("Both fields required");
-         error.statusCode = 400;
-         return next(error);
-       }
-
-       const userExist = await User.findOne({email});
-       if(!userExist){
-         const error = new Error("User not exists");
-         error.statusCode = 400;
-         return next(error);
-       }
-
-       if(userExist.isVerified){
-         const error = new Error("User already verified");
-         error.statusCode = 400;
-         return next(error);
-       }
-
-       if(userExist.verificationCode !== verificationCode){
-         const error = new Error("Verification code is incorrect");
-         error.statusCode = 400;
-         return next(error);
-       }
-
-       if(!userExist.verificationCodeExpires || userExist.verificationCodeExpires < new Date()){
-         const error = new Error("Verification code expired");
-         error.statusCode = 400;
-         return next(error);
-       }
-
-       userExist.isVerified = true;
-       userExist.verificationCode = undefined;
-       userExist.verificationCodeExpires = undefined;
-
-       await userExist.save();
-
-       res.status(200).json({
-        message : "Email verified successfully"
-       })
-    }catch(err){
-       next(err)
-    }
-}
 
 const loginUser = async (req, res, next) => {
     try{
@@ -116,12 +56,6 @@ const loginUser = async (req, res, next) => {
        const user = await User.findOne({email});
        if(!user){
          const error = new Error("User not found");
-         error.statusCode = 400;
-         return next(error);
-       }
-
-       if(!user.isVerified){
-        const error = new Error("Please verify your email first");
          error.statusCode = 400;
          return next(error);
        }
@@ -170,13 +104,11 @@ const googleLogin = async (req,res,next) => {
              username : name,
              email,
              googleId,
-             isVerified : true
          })
        }
 
        if(!user.googleId){
           user.googleId = googleId,
-          user.isVerified = true,
 
           await user.save();
        }
@@ -195,4 +127,4 @@ const googleLogin = async (req,res,next) => {
     }
 }
 
-module.exports = {registerUser, verifyEmail, loginUser, googleLogin};
+module.exports = {registerUser, loginUser, googleLogin};

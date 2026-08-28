@@ -28,7 +28,7 @@ function Register(){
                 setIsLoading(true);
                const response = await api.post("/auth/register", registerUser);
                alert(response.data.message);
-               navigate("/verify-email");
+               navigate("/login");
              }catch(err){
                alert(err.response?.data?.message || "Register failed");
              }finally{
