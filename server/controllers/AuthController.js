@@ -1,6 +1,6 @@
 const User = require("../models/User");
 const bcrypt = require("bcrypt");
-const transporter = require("../config/email");
+const sendVerificationEmail = require("../config/email");
 const jwt = require("jsonwebtoken");
 const googleClient = require("../config/google")
 
@@ -40,18 +40,12 @@ const registerUser = async (req,res,next) => {
         verificationCodeExpires
       })
 
-     await transporter.sendMail({
-        from : process.env.EMAIL_USER,
-        to : email,
-        subject : "Memory Cloud verification code",
-        html : `
-               <h2>MemoryCloud Email Verification</h2>
-               <p>Your verification code is:</p>
-               <h1>${verificationCode}</h1>
-               <p>This code will expire in 10 minutes.</p>
-               `
-        })
-
+      try {
+        await sendVerificationEmail(email, verificationCode);
+      }catch (emailError) {
+         await User.findByIdAndDelete(user._id);
+         throw emailError;
+      }
       res.status(201).json({
         message : "User registered successfully, Check your email for verification code"
       })
