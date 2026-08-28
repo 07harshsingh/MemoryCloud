@@ -1,6 +1,5 @@
 const User = require("../models/User");
 const bcrypt = require("bcrypt");
-const sendVerificationEmail = require("../config/email");
 const jwt = require("jsonwebtoken");
 const googleClient = require("../config/google")
 
